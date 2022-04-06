@@ -19,15 +19,15 @@ Shava.keyboard = new Markup.inlineKeyboard(
     ]
 )
 
-Shava.receipt = []
-
 Shava.scene = new Scenes.WizardScene(
     'SHAVA',
     ctx => {
+        ctx.wizard.state.receipt = []
         ctx.reply('Выберите то, что вам по душе', Shava.keyboard)
         return ctx.wizard.next()
     },
     ctx => {
+        console.log(ctx.wizard.state.receipt)
         if (ctx.update['callback_query'] === undefined) return Shava.sceneErr(ctx)
         if (ctx?.update?.callback_query?.data === 'close') {
             ctx.deleteMessage()
@@ -43,9 +43,7 @@ Shava.scene = new Scenes.WizardScene(
         }
         const product = JSON.parse(ctx?.update?.callback_query?.data)
         const text = ctx.update.callback_query.message.text
-        Shava.receipt.push(product)
-
-        console.log(Shava.receipt)
+        ctx.wizard.state.receipt.push(product)
 
         ctx.editMessageText(text + `\n • ${product.name}`, Shava.keyboard)
 
@@ -54,11 +52,12 @@ Shava.scene = new Scenes.WizardScene(
     ctx => {
         if (ctx.update['callback_query'] === undefined) return Shava.sceneErr(ctx)
         console.log('receipt', 2)
+        console.log(ctx.update.callback_query)
 
         let cost = 0
         let receipt = 'ООО Doner Bar \n ----------'
 
-        for (let proudct of Shava.receipt) {
+        for (let proudct of ctx.wizard.state.receipt) {
             console.log(proudct)
             cost += Number(proudct.cost)
             receipt += `\n${proudct.name} : ${proudct.cost}`
