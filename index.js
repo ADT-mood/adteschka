@@ -20,9 +20,8 @@ bot.command('start', ctx => {
     console.log('strat')
 })
 
-bot.command('shava', ctx => ctx.scene.enter('SHAVA'))
+bot.command('shava', ctx => ctx.scene.enter('ORDER'))
 
 console.log(process.env.TOKEN)
-console.log(Telegraf)
 
 bot.launch()

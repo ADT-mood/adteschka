@@ -4,80 +4,125 @@ import {parse} from "dotenv";
 
 const Shava = {}
 
+Shava.products = [
+    {"name": "КЛАССИЧЕСКАЯ", "cost": 170},
+    {"name": "C БРУСНИКОЙ И МЯТОЙ", "cost": 210},
+    {"name": "БАБЕКЮ", "cost": 219},
+    {"name": "СЫРНАЯ", "cost": 180},
+    {"name": "GIROS", "cost": 199},
+    {"name": "МЕКСИКАНСКАЯ", "cost": 199},
+    {"name": "ВЕГЕТАРИАНСКАЯ", "cost": 150},
+    {"name": "МИНИ", "cost": 99},
+]
+
 Shava.keyboard = new Markup.inlineKeyboard(
     [
         //[{ text: '', callback_data: '{"name": "", "cost": ""}' }],
-        [{ text: '170₽ КЛАССИЧЕСКАЯ', callback_data: `{"name": "КЛАССИЧЕСКАЯ", "cost": "170"}` }],
-        [{ text: '210₽ C БРУСНИКОЙ И МЯТОЙ', callback_data: '{"name": "C БРУСНИКОЙ И МЯТОЙ", "cost": "210"}' }],
-        [{ text: '219₽ БАБЕКЮ', callback_data: '{"name": "БАБЕКЮ", "cost": "219"}' }],
-        [{ text: '180₽ СЫРНАЯ', callback_data: '{"name": "СЫРНАЯ", "cost": "180"}' }],
-        [{ text: '199₽ GIROS', callback_data: '{"name": "GIROS", "cost": "199"}' }],
-        [{ text: '199₽ МЕКСИКАНСКАЯ', callback_data: '{"name": "МЕКСИКАНСКАЯ", "cost": "199"}' }],
-        [{ text: '150₽ ВЕГЕТАРИАНСКАЯ', callback_data: '{"name": "ВЕГЕТАРИАНСКАЯ", "cost": "150"}' }],
-        [{ text: '99₽ МИНИ', callback_data: `{"name": "МИНИ", "cost": "99"}` }],
-        [{ text: '❌ Отменить', callback_data: 'close' }, { text: '💸 Посчитать', callback_data: 'receipt' }],
+        [{ text: '❌ Отменить', callback_data: 'close' }],
+        [{ text: '170₽ КЛАССИЧЕСКАЯ', callback_data: `product:0`}],
+        [{ text: '210₽ C БРУСНИКОЙ И МЯТОЙ', callback_data: 'product:1' }],
+        [{ text: '219₽ БАБЕКЮ', callback_data: 'product:2' }],
+        [{ text: '180₽ СЫРНАЯ', callback_data: 'product:3' }],
+        [{ text: '199₽ GIROS', callback_data: 'product:4' }],
+        [{ text: '199₽ МЕКСИКАНСКАЯ', callback_data: 'product:5' }],
+        [{ text: '150₽ ВЕГЕТАРИАНСКАЯ', callback_data: 'product:6' }],
+        [{ text: '99₽ МИНИ', callback_data: `product:7` }],
+        [{ text: '↩️ Убрать последний', callback_data: 'remove' }, { text: '💸 Посчитать', callback_data: 'receipt' }],
     ]
 )
 
-Shava.scene = new Scenes.WizardScene(
-    'SHAVA',
-    ctx => {
-        ctx.wizard.state.receipt = []
-        ctx.reply('Выберите то, что вам по душе', Shava.keyboard)
-        return ctx.wizard.next()
-    },
-    ctx => {
-        console.log(ctx.wizard.state.receipt)
-        if (ctx.update['callback_query'] === undefined) return Shava.sceneErr(ctx)
-        if (ctx?.update?.callback_query?.data === 'close') {
-            ctx.deleteMessage()
-            Shava.receipt = []
-            return ctx.scene.leave()
+Shava.scene = new Scenes.BaseScene('ORDER')
+Shava.scene.enter( ctx => {
+    console.log(ctx.update.message)
+    const first_name = ctx.update.message.from.first_name
+    ctx.session.__scenes.state[first_name] = []
+    ctx.reply( 'Выберите то, что вам по душе', Shava.keyboard, { parse_mode: 'HTML'})
+})
+
+Shava.scene.action(/product/, ctx => {
+    console.log(0, ctx.session.__scenes.state)
+    const state = ctx.session.__scenes.state
+    const first_name = ctx.update.callback_query.from.first_name
+    const productId = ctx.update.callback_query.data.split(':')[1]
+    const product = Shava.products[productId]
+
+    if (typeof state[first_name] === 'undefined') state[first_name] = []
+    const products = state[first_name]
+
+    products.push(product)
+
+    let productsString = ''
+    let cost = 0
+
+    for (let key in state) {
+        productsString += `\n${key}:`
+        for (let el of state[key]) {
+            productsString += `\n • ${el.name.toLowerCase()}`
+            cost += el.cost
         }
-        if (ctx?.update?.callback_query?.data === 'receipt') {
-            console.log('receipt')
-            return ctx.wizard.selectStep(2)
-        }
-        if (ctx.update.callback_query.data) {
-
-        }
-        const product = JSON.parse(ctx?.update?.callback_query?.data)
-        const text = ctx.update.callback_query.message.text
-        ctx.wizard.state.receipt.push(product)
-
-        ctx.editMessageText(text + `\n • ${product.name}`, Shava.keyboard)
-
-        return
-    },
-    ctx => {
-        if (ctx.update['callback_query'] === undefined) return Shava.sceneErr(ctx)
-        console.log('receipt', 2)
-        console.log(ctx.update.callback_query)
-
-        let cost = 0
-        let receipt = 'ООО Doner Bar \n ----------'
-
-        for (let proudct of ctx.wizard.state.receipt) {
-            console.log(proudct)
-            cost += Number(proudct.cost)
-            receipt += `\n${proudct.name} : ${proudct.cost}`
-        }
-
-        receipt += `\n ---------- \n <b>ИТОГ ${cost}</b>`
-        receipt += '\n\n<i>Не забудьте скинуть денежку</i>'
-
-        ctx.deleteMessage()
-        ctx.reply(receipt, { parse_mode: 'HTML' })
-        return ctx.scene.leave()
     }
-    )
 
-Shava.sceneErr = function(ctx) {
-    console.log('err')
-    Shava.receipt = []
-    ctx.deleteMessage(ctx.message.message_id - 1)
-    ctx.reply('Ай шайтанаме не понимате две?')
-    return ctx.scene.leave()
-}
+    console.log(1, state)
+
+    ctx.editMessageText(
+        `Выберите то, что вам по душе\n${productsString}\n\nсумма: ${cost}`,
+        Shava.keyboard
+    )
+})
+
+Shava.scene.action('remove', ctx => {
+    const state = ctx.session.__scenes.state
+    const first_name = ctx.update.callback_query.from.first_name
+    const products = state[first_name]
+
+    if (products.length === 0) return
+
+    products.pop()
+
+    console.log(state)
+
+    let productsString = ''
+    let cost = 0
+
+    for (let key in state) {
+        productsString += `\n${key}:`
+        for (let el of state[key]) {
+            productsString += `\n • ${el.name}`
+            cost += el.cost
+        }
+    }
+
+
+    ctx.editMessageText(
+        `Выберите то, что вам по душе\n${productsString}\n\nсумма: ${cost}`,
+        Shava.keyboard
+    )
+})
+
+Shava.scene.action('close', ctx => {
+    ctx.deleteMessage()
+    ctx.scene.leave()
+})
+
+Shava.scene.action('receipt', ctx => {
+    ctx.deleteMessage()
+    const state = ctx.session.__scenes.state
+    let text = '<b>--- ООО ДонерБар ---</b>\n'
+
+    let cost = 0
+
+    for (let key in state) {
+        text += `\n${key}:`
+        for (let el of state[key]) {
+            text += `\n - ${el.name} -- ${el.cost}`
+            cost += el.cost
+        }
+    }
+
+    text += `\n\n<i>ИТОГ: <b>${cost}</b></i>`
+    text += `\n<i>Не забудьте скинуть денежку</i>`
+
+    ctx.reply(text, {parse_mode: 'HTML'})
+})
 
 export default Shava
