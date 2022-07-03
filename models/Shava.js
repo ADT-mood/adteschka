@@ -31,6 +31,8 @@ Shava.keyboard = new Markup.inlineKeyboard(
     ]
 )
 
+Shava.orders = {}
+
 Shava.scene = new Scenes.BaseScene('ORDER')
 Shava.scene.enter( ctx => {
     console.log(ctx.update.message)
@@ -40,6 +42,7 @@ Shava.scene.enter( ctx => {
 })
 
 Shava.scene.action(/product/, ctx => {
+    console.log(-1, ctx, -2, ctx.session.__scenes)
     console.log(0, ctx.session.__scenes.state)
     const state = ctx.session.__scenes.state
     const first_name = ctx.update.callback_query.from.first_name
