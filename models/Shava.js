@@ -36,36 +36,40 @@ Shava.orders = {}
 Shava.scene = new Scenes.BaseScene('ORDER')
 Shava.scene.enter( ctx => {
     console.log(ctx.update.message)
-    const first_name = ctx.update.message.from.first_name
-    ctx.session.__scenes.state[first_name] = []
+    const orderId = ctx.update.message.chat.id
+    Shava.orders[orderId] = {}
     ctx.reply( 'Выберите то, что вам по душе', Shava.keyboard, { parse_mode: 'HTML'})
 })
 
 Shava.scene.action(/product/, ctx => {
-    console.log(-1, ctx, -2, ctx.session.__scenes)
-    console.log(0, ctx.session.__scenes.state)
-    const state = ctx.session.__scenes.state
+    console.log(0, ctx)
+
     const first_name = ctx.update.callback_query.from.first_name
+    const orderId = ctx.update.callback_query.message.chat.id
+    const order = Shava.orders[orderId]
     const productId = ctx.update.callback_query.data.split(':')[1]
     const product = Shava.products[productId]
 
-    if (typeof state[first_name] === 'undefined') state[first_name] = []
-    const products = state[first_name]
+    console.log(orderId, first_name)
+
+    if (typeof order[first_name] === 'undefined') order[first_name] = []
+    const products = order[first_name]
 
     products.push(product)
 
     let productsString = ''
     let cost = 0
 
-    for (let key in state) {
+    for (let key in order) {
         productsString += `\n${key}:`
-        for (let el of state[key]) {
+        for (let el of order[key]) {
             productsString += `\n • ${el.name.toLowerCase()}`
             cost += el.cost
         }
     }
 
-    console.log(1, state)
+    console.log(1, order)
+    console.log(2, Shava.orders)
 
     ctx.editMessageText(
         `Выберите то, что вам по душе\n${productsString}\n\nсумма: ${cost}`,
@@ -74,22 +78,23 @@ Shava.scene.action(/product/, ctx => {
 })
 
 Shava.scene.action('remove', ctx => {
-    const state = ctx.session.__scenes.state
     const first_name = ctx.update.callback_query.from.first_name
-    const products = state[first_name]
+    const orderId = ctx.update.callback_query.message.chat.id
+    const order = Shava.orders[orderId]
+    const products = order[first_name]
 
     if (products.length === 0) return
 
     products.pop()
 
-    console.log(state)
+    console.log(order)
 
     let productsString = ''
     let cost = 0
 
-    for (let key in state) {
+    for (let key in order) {
         productsString += `\n${key}:`
-        for (let el of state[key]) {
+        for (let el of order[key]) {
             productsString += `\n • ${el.name}`
             cost += el.cost
         }
@@ -109,14 +114,15 @@ Shava.scene.action('close', ctx => {
 
 Shava.scene.action('receipt', ctx => {
     ctx.deleteMessage()
-    const state = ctx.session.__scenes.state
+    const orderId = ctx.update.callback_query.message.chat.id
+    const order = Shava.orders[orderId]
     let text = '<b>--- ООО ДонерБар ---</b>\n'
 
     let cost = 0
 
-    for (let key in state) {
+    for (let key in order) {
         text += `\n${key}:`
-        for (let el of state[key]) {
+        for (let el of order[key]) {
             text += `\n - ${el.name} -- ${el.cost}`
             cost += el.cost
         }
