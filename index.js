@@ -20,6 +20,10 @@ bot.command('start', ctx => {
     console.log('strat')
 })
 
+bot.command('repo', ctx => {
+    ctx.reply('<a href="https://github.com/ADT-mood/adteschka">Репозиторий</a>', { parse_mode: 'HTML' })
+})
+
 bot.command('shava', ctx => ctx.scene.enter('ORDER'))
 
 console.log(process.env.TOKEN)
