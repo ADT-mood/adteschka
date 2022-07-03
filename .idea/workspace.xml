@@ -6,7 +6,6 @@
   <component name="ChangeListManager">
     <list default="true" id="d756bb39-0c4f-43fd-aae0-c3142b2e800e" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/models/Shava.js" beforeDir="false" afterPath="$PROJECT_DIR$/models/Shava.js" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -53,7 +52,7 @@
       <workItem from="1649350750657" duration="86000" />
       <workItem from="1656262716448" duration="11062000" />
       <workItem from="1656327068999" duration="61000" />
-      <workItem from="1656842217196" duration="3736000" />
+      <workItem from="1656842217196" duration="4433000" />
     </task>
     <servers />
   </component>
